@@ -9,6 +9,7 @@ from plombery import task, get_logger, Trigger, register_pipeline,get_app
 from starlette.staticfiles import StaticFiles
 
 from run.src.check_config import check_config_job
+from run.src.check_xxljob_config import check_job_configs_hb, check_job_configs_dlb
 from run.src.fetch_account_data import fetch_account_data_job
 from run.src.fetch_plan_data import fetch_plan_data_job
 
@@ -17,7 +18,10 @@ app = get_app()
 register_pipeline(
     id="check",
     description="远传出账配置检查",
-    tasks = [check_config_job],
+    tasks = [
+            # check_config_job,
+             check_job_configs_dlb,
+             check_job_configs_hb],
     triggers = [
         Trigger(
             id="daily",

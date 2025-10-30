@@ -1,9 +1,19 @@
+import logging
+
 import requests
 import json
 
+from plombery import task,get_logger
+
+from run.src.fetch_account_data import sms_client
+from run.src.sms.sms_client import SMSClient
+from run.src.utils import ConfigLoader
+
 LOGIN_URL = 'http://10.10.102.252:11005/xxljobadmin/login'
 PAGE_URL = 'http://10.10.102.252:11005/xxljobadmin/jobinfo/pageList'
-
+config = ConfigLoader.ConfigLoader()
+sms_client = SMSClient(base_url=config.get_sms_api())
+logger = logging.getLogger(__name__)
 
 def get_xxl_session(url, login_data):
     """
@@ -46,16 +56,15 @@ def get_xxl_page(session, url, page_payload):
         print("❌ 解析任务列表响应失败，返回的不是有效的JSON格式。")
         return None
 
-
+@task
 def check_job_configs_dlb() -> str:
     """
-    一个自包含的函数，用于检查所有预定义的XXL-Job任务配置。
-    所有配置信息都硬编码在此函数内部。
+    检查大路表远传表出账定时任务参数
     """
-    print("=============================================")
-    print("=      开始执行 XXL-Job 配置巡检任务      =")
-    print("=============================================\n")
-
+    job_name = "check_job_configs_dlb"
+    job_config = config.get_config_by_job(job_name)
+    logger = get_logger()
+    logger.info("=      开始执行 XXL-Job 配置巡检任务      =\n")
     # --- 1. 定义所有需要校验的任务配置 ---
     jobs_to_check = [
         {
@@ -114,18 +123,18 @@ def check_job_configs_dlb() -> str:
     # --- 3. 执行登录和查询 ---
     session = get_xxl_session(LOGIN_URL, login_payload)
     if not session:
-        print("\n巡检任务因登录失败而中止。")
+        logger.error("\n巡检任务因登录失败而中止。")
         return
 
     page_data = get_xxl_page(session, PAGE_URL, page_payload)
     if not page_data or 'data' not in page_data:
-        print("\n巡检任务因获取任务列表失败而中止。")
+        logger.error("\n巡检任务因获取任务列表失败而中止。")
         return
 
     # --- 4. 遍历并校验每个预定义的任务 ---
     all_jobs_data = {job['id']: job for job in page_data['data']}  # 将列表转为字典，方便通过ID查找
 
-    print("\n--- 开始逐一校验任务配置 ---")
+    logger.info("\n--- 开始逐一校验任务配置 ---")
     overall_success = True
     message = '[大路表远传出账定时任务检查]\n'
     for check_item in jobs_to_check:
@@ -134,10 +143,11 @@ def check_job_configs_dlb() -> str:
         expected_cron = check_item["expected_cron"]
         expected_param = check_item["expected_param"]
 
-        print(f"\n--- 校验任务: {job_desc} (ID: {job_id}) ---")
+        logger.info(f"\n--- 校验任务: {job_desc} (ID: {job_id}) ---")
 
         if job_id not in all_jobs_data:
-            print(f"❌ 校验失败：在任务列表中未找到 ID 为 {job_id} 的任务。")
+            logger.error(f"❌ 校验失败：在任务列表中未找到 ID 为 {job_id} 的任务。")
+            message += f'{job_desc}在任务列表中未找到!\n'
             overall_success = False
             continue
 
@@ -151,47 +161,46 @@ def check_job_configs_dlb() -> str:
 
         # 校验Cron
         if actual_cron != expected_cron:
-            print(f"  -{job_desc}Cron不匹配! 期望: '{expected_cron}', 实际: '{actual_cron}'")
-            message += '{job_desc}Cron不匹配!\n'
+            logger.error(f"  -{job_desc}Cron不匹配! 期望: '{expected_cron}', 实际: '{actual_cron}'")
+            message += f'{job_desc}Cron不匹配!\n'
 
             current_job_success = False
             overall_success = False
 
         # 校验参数
         if actual_param != expected_param:
-            print(f"  -{job_desc}参数不匹配! 期望: '{expected_param}', 实际: '{actual_param}'")
-            message += '{job_desc}参数不匹配!\n'
+            logger.error(f"  -{job_desc}参数不匹配! 期望: '{expected_param}', 实际: '{actual_param}'")
+            message += f'{job_desc}参数不匹配!\n'
             current_job_success = False
             overall_success = False
 
         # 校验定时任务状态
         if actual_status != 1:
-            print(f"  -{job_desc}当前定时任务状态异常，未开启")
-            message += '{job_desc}任务状态异常，未开启!\n'
+            logger.error(f"  -{job_desc}当前定时任务状态异常，未开启")
+            message += f'{job_desc}任务状态异常，未开启!\n'
             current_job_success = False
             overall_success = False
 
         if current_job_success:
-            print("  - ✅ 配置完全正确！")
-            message += '{job_desc}配置完全正确!\n'
+            logger.info("  - ✅ 配置完全正确！")
+            message += f'{job_desc}配置完全正确!\n'
 
-    # --- 5. 打印最终总结 ---
-    print("\n=============================================")
     if overall_success:
-        print("🎉 恭喜！所有预定义的任务配置均校验通过！")
+        logger.info("🎉 恭喜！所有预定义的任务配置均校验通过！")
     else:
-        print("⚠️ 注意！部分任务配置存在不匹配项，请检查以上日志！")
-    print("=============================================")
+        logger.info("⚠️ 注意！部分任务配置存在不匹配项，请检查以上日志！")
 
+    sms_client.send_sms(phones=job_config['phones'],content=message,logger=logger)
 
+@task
 def check_job_configs_hb() -> str:
     """
-    一个自包含的函数，用于检查所有预定义的XXL-Job任务配置。
-    所有配置信息都硬编码在此函数内部。
+    检查大路表户表出账定时任务参数
     """
-    print("=============================================")
-    print("=      开始执行 XXL-Job 配置巡检任务      =")
-    print("=============================================\n")
+    logger = get_logger()
+    job_name = "check_job_configs_hb"
+    job_config = config.get_config_by_job(job_name)
+    logger.info("=      开始执行 XXL-Job 配置巡检任务      =\n")
 
     # --- 1. 定义所有需要校验的任务配置 ---
     jobs_to_check = [
@@ -222,18 +231,18 @@ def check_job_configs_hb() -> str:
     # --- 3. 执行登录和查询 ---
     session = get_xxl_session(LOGIN_URL, login_payload)
     if not session:
-        print("\n巡检任务因登录失败而中止。")
+        logger.error("\n巡检任务因登录失败而中止。")
         return
 
     page_data = get_xxl_page(session, PAGE_URL, page_payload)
     if not page_data or 'data' not in page_data:
-        print("\n巡检任务因获取任务列表失败而中止。")
+        logger.error("\n巡检任务因获取任务列表失败而中止。")
         return
 
     # --- 4. 遍历并校验每个预定义的任务 ---
     all_jobs_data = {job['id']: job for job in page_data['data']}  # 将列表转为字典，方便通过ID查找
 
-    print("\n--- 开始逐一校验任务配置 ---")
+    logger.info("\n--- 开始逐一校验任务配置 ---")
     overall_success = True
     message = '[户表远传出账定时任务检查]\n'
     for check_item in jobs_to_check:
@@ -242,10 +251,11 @@ def check_job_configs_hb() -> str:
         expected_cron = check_item["expected_cron"]
         expected_param = check_item["expected_param"]
 
-        print(f"\n--- 校验任务: {job_desc} (ID: {job_id}) ---")
+        logger.info(f"\n--- 校验任务: {job_desc} (ID: {job_id}) ---")
 
         if job_id not in all_jobs_data:
-            print(f"❌ 校验失败：在任务列表中未找到 ID 为 {job_id} 的任务。")
+            logger.error(f"❌ 校验失败：在任务列表中未找到 ID 为 {job_id} 的任务。")
+            message += f'{job_desc}在任务列表中未找到!\n'
             overall_success = False
             continue
 
@@ -259,38 +269,41 @@ def check_job_configs_hb() -> str:
 
         # 校验Cron
         if actual_cron != expected_cron:
-            print(f"  -{job_desc}Cron不匹配! 期望: '{expected_cron}', 实际: '{actual_cron}'")
-            message+='{job_desc}Cron不匹配!\n'
+            logger.error(f"  -{job_desc}Cron不匹配! 期望: '{expected_cron}', 实际: '{actual_cron}'")
+            message+=f'{job_desc}Cron不匹配!\n'
 
             current_job_success = False
             overall_success = False
 
         # 校验参数
         if actual_param != expected_param:
-            print(f"  -{job_desc}参数不匹配! 期望: '{expected_param}', 实际: '{actual_param}'")
-            message += '{job_desc}参数不匹配!\n'
+            logger.error(f"  -{job_desc}参数不匹配! 期望: '{expected_param}', 实际: '{actual_param}'")
+            message += f'{job_desc}参数不匹配!\n'
             current_job_success = False
             overall_success = False
 
         # 校验定时任务状态
         if actual_status != 1:
-            print(f"  -{job_desc}当前定时任务状态异常，未开启")
-            message += '{job_desc}任务状态异常，未开启!\n'
+            logger.error(f"  -{job_desc}当前定时任务状态异常，未开启")
+            message += f'{job_desc}任务状态异常，未开启!\n'
             current_job_success = False
             overall_success = False
 
         if current_job_success:
-            print("  - ✅ 配置完全正确！")
-            message += '{job_desc}配置完全正确!\n'
+            logger.info("  - ✅ 配置完全正确！")
+            message += f'{job_desc}配置完全正确!\n'
 
     # --- 5. 打印最终总结 ---
-    print("\n=============================================")
     if overall_success:
-        print("🎉 恭喜！所有预定义的任务配置均校验通过！")
+        logger.info("🎉 恭喜！所有预定义的任务配置均校验通过！")
     else:
-        print("⚠️ 注意！部分任务配置存在不匹配项，请检查以上日志！")
-    print("=============================================")
+        logger.info("⚠️ 注意！部分任务配置存在不匹配项，请检查以上日志！")
+
+    # 发送短信
+    sms_client.send_sms(phones=job_config['phones'],content=message,logger=logger)
+
+
+
 if __name__ == "__main__":
-    # 调用这个唯一的、自包含的检查函数
     print(check_job_configs_dlb())
     print(check_job_configs_hb())
