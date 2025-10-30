@@ -1,0 +1,153 @@
+sms_api: http://172.16.14.15:8099/sharding/message/batchSend?account=3564001
+
+database:
+  ds_common:
+    # type: 数据库类型 为None默认pg
+    host: 172.16.14.91
+    port: 11032
+    user: wpg_read
+    password: yEbf9#FLp#cY
+    name: wpg
+  ds_sjs:
+    # type: 数据库类型 为None默认pg
+    host: 172.16.14.90
+    port: 11032
+    user: wpg_read
+    password: yEbf9#FLp#cY
+    name: wpg
+  ds_dx:
+    # type: 数据库类型 为None默认pg
+    host: 172.16.14.90
+    port: 11032
+    user: wpg_read
+    password: yEbf9#FLp#cY
+    name: wpg_2_dx
+  ds_mtg:
+    # type: 数据库类型 为None默认pg
+    host: 172.16.14.90
+    port: 11032
+    user: wpg_read
+    password: yEbf9#FLp#cY
+    name: wpg_2_mtg
+  ds_lq:
+    # type: 数据库类型 为None默认pg
+    host: 172.16.14.90
+    port: 11032
+    user: wpg_read
+    password: yEbf9#FLp#cY
+    name: wpg_2_lq
+  ds_tz:
+    # type: 数据库类型 为None默认pg
+    host: 172.16.14.90
+    port: 11032
+    user: wpg_read
+    password: yEbf9#FLp#cY
+    name: wpg_2_tz
+  ds_hr:
+    # type: 数据库类型 为None默认pg
+    host: 172.16.14.90
+    port: 11032
+    user: wpg_read
+    password: yEbf9#FLp#cY
+    name: wpg_2_hr
+  ds_jy:
+    # type: 数据库类型 为None默认pg
+    host: 172.16.14.90
+    port: 11032
+    user: wpg_read
+    password: yEbf9#FLp#cY
+    name: wpg_2_jy
+  ds_my:
+    # type: 数据库类型 为None默认pg
+    host: 172.16.14.90
+    port: 11032
+    user: wpg_read
+    password: yEbf9#FLp#cY
+    name: wpg_2_tz
+  ds_qb:
+    # type: 数据库类型 为None默认pg
+    host: 172.16.14.90
+    port: 11032
+    user: wpg_read
+    password: yEbf9#FLp#cY
+    name: wpg_2_qb
+  ds_sq:
+    host: 172.16.14.92
+    port: 21032
+    name: wpg_1_sq
+    user: wpg
+    password: AX71fvGjLNhD4+w=
+    # ??
+  ds_cy:
+    host: 172.16.14.92
+    port: 21032
+    db: wpg_1_cy
+    user: wpg
+    password: AX71fvGjLNhD4+w=
+  ds_hd:
+    host: 172.16.14.89
+    port: 21032
+    name: wpg_1_hd
+    user: wpg
+    password: AX71fvGjLNhD4+w=
+  ds_ft:
+    host: 172.16.14.89
+    port: 21032
+    name: wpg_1_ft
+    user: wpg
+    password: AX71fvGjLNhD4+w=
+  
+  ds_jc:
+    host: 172.16.14.89
+    port: 21032
+    name: wpg_1_jc
+    user: wpg
+    password: AX71fvGjLNhD4+w=
+jobs:
+  fetch_plan_data_every_day:
+    # 生产9家郊区分公司获取查表计划数据
+    sql: |
+      select count(*) ,1 as seq from water_revenue.water_meter_read
+      union all
+      select count(*) ,2 as seq from water_revenue.water_meter_read_his_{previous} where  mr_month = '{previous_month}'
+      union all
+      select count(*) ,3 as seq from water_revenue.water_meter_read_his_{last_year} where mr_month = '{last_year_month}'
+      order by seq
+    companies:
+      # 配当前生产的所有营销单位
+      - ds_sjs
+      - ds_mtg
+      - ds_hr
+      - ds_jy
+      - ds_tz
+      - ds_lq
+      - ds_my
+      - ds_qb
+    phones: 15671669511,17371694776,17801115673,19871829638,18800502823,18621759775
+
+  fetch_account_data:
+    # 生产9家郊区分公司获取户表远传出账数据
+    sql: |
+      select count(*),1 as seq from water_revenue.water_meter_read where client_type = '1' and mr_enter_staff = '远传' 
+      union all 
+      select count(*) ,2 as seq from water_revenue.water_meter_read where client_type = '1' and account_opening_plan ='1'
+      union all
+      select count(*),3 as seq from water_revenue.water_meter_read where client_type = '2' and mr_enter_staff = '远传' 
+      union all 
+      select count(*) ,4 as seq from water_revenue.water_meter_read where client_type = '2' and account_opening_plan ='1'
+      order by seq
+    companies:
+      # 配当前生产的所有营销单位
+      - ds_sjs
+      - ds_mtg
+      - ds_hr
+      - ds_jy
+      - ds_tz
+      - ds_lq
+      - ds_my
+      - ds_qb
+    phones: 15671669511,17371694776,17801115673,19871829638,18800502823,18621759775
+  check_config_job:
+    # 生产9家郊区分公司获取大路表远传出账数据
+    phones: 15671669511,17371694776,17801115673,19871829638,18800502823,18621759775
+    scheduler:
