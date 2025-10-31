@@ -10,11 +10,11 @@ database:
     name: wpg
   ds_sjs:
     # type: 数据库类型 为None默认pg
-    host: 172.16.14.90
-    port: 11032
-    user: wpg_read
-    password: yEbf9#FLp#cY
-    name: wpg
+    host: 10.10.15.145
+    port: 54321
+    user: wpg
+    password: 12345678ab
+    name: wpg_sjs
   ds_dx:
     # type: 数据库类型 为None默认pg
     host: 172.16.14.90
@@ -103,6 +103,12 @@ database:
     name: wpg_1_jc
     user: wpg
     password: AX71fvGjLNhD4+w=
+  ds_cxd:
+    host: 10.10.15.145
+    port: 54321
+    user: wpg
+    password: 12345678ab
+    name: wpg_2_cxd
 jobs:
   fetch_plan_data_every_day:
     # 生产9家郊区分公司获取查表计划数据
@@ -136,24 +142,25 @@ jobs:
       union all 
       select count(*) ,4 as seq from water_revenue.water_meter_read where client_type = '2' and account_opening_plan ='1'
       union all 
-      select count(*) ,5 as seq from water_revenue.water_meter_read_his_{previous} where client_type = '1' and account_opening_plan ='1' and mr_enter_staff = '远传' and mr_month='{previous_month}'
+      select count(*) ,5 as seq from water_revenue.water_meter_read_his_{previous} where client_type = '1' and account_opening_plan ='1' and mr_enter_staff = '远传' and mr_month='{previous_month}' and mr_input_time <= '{previous_year_date}'
       union all 
-      select count(*) ,5 as seq from water_revenue.water_meter_read_his_{last_year} where client_type = '1' and account_opening_plan ='1' and mr_enter_staff = '远传' and mr_month='{last_year_month}'
+      select count(*) ,6 as seq from water_revenue.water_meter_read_his_{last_year} where client_type = '1' and account_opening_plan ='1' and mr_enter_staff = '远传' and mr_month='{last_year_month}' and mr_input_time <= '{last_year_date}'
       union all
-      select count(*) ,5 as seq from water_revenue.water_meter_read_his_{previous} where client_type = '2' and account_opening_plan ='1' and mr_enter_staff = '远传' and mr_month='{previous_month}'
+      select count(*) ,7 as seq from water_revenue.water_meter_read_his_{previous} where client_type = '2' and account_opening_plan ='1' and mr_enter_staff = '远传' and mr_month='{previous_month}' and work_day <= '{work_day}'
       union all
-      select count(*) ,5 as seq from water_revenue.water_meter_read_his_{last_year} where client_type = '2' and account_opening_plan ='1' and mr_enter_staff = '远传' and mr_month='{last_year_month}'
+      select count(*) ,8 as seq from water_revenue.water_meter_read_his_{last_year} where client_type = '2' and account_opening_plan ='1' and mr_enter_staff = '远传' and mr_month='{last_year_month}' and work_day <= '{work_day}'
       order by seq
     companies:
       # 配当前生产的所有营销单位
       - ds_sjs
-      - ds_mtg
-      - ds_hr
-      - ds_jy
-      - ds_tz
-      - ds_lq
-      - ds_my
-      - ds_qb
+      - ds_cxd
+#      - ds_mtg
+#      - ds_hr
+#      - ds_jy
+#      - ds_tz
+#      - ds_lq
+#      - ds_my
+#      - ds_qb
     phones: 15671669511,17371694776,17801115673,19871829638,18800502823,18621759775
   check_config_job:
     # 生产9家郊区分公司获取大路表远传出账数据
