@@ -1,5 +1,6 @@
 sms_api: http://172.16.14.15:8099/sharding/message/batchSend?account=3564001
-
+XXL_LOGIN_URL: http://172.16.14.26:11005/xxljobadmin/login
+XXL_PAGE_URL: http://172.16.14.26:11005/xxljobadmin/jobinfo/pageList
 database:
   ds_common:
     # type: 数据库类型 为None默认pg
@@ -154,19 +155,17 @@ jobs:
       # 配当前生产的所有营销单位
       - ds_sjs
       - ds_cxd
-#      - ds_mtg
-#      - ds_hr
-#      - ds_jy
-#      - ds_tz
-#      - ds_lq
-#      - ds_my
-#      - ds_qb
+      - ds_mtg
+      - ds_hr
+      - ds_jy
+      - ds_tz
+      - ds_lq
+      - ds_my
+      - ds_qb
     phones: 15671669511,17371694776,17801115673,19871829638,18800502823,18621759775
   check_config_job:
     # 生产9家郊区分公司获取大路表远传出账数据
     phones: 15671669511,17371694776,17801115673,19871829638,18800502823,18621759775
     scheduler:
-  check_job_configs_dlb:
-    phones: 15671669511,17371694776,17801115673,19871829638,18800502823,18621759775
-  check_job_configs_hb:
+  check_job_configs:
     phones: 15671669511,17371694776,17801115673,19871829638,18800502823,18621759775

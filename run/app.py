@@ -9,19 +9,34 @@ from plombery import task, get_logger, Trigger, register_pipeline,get_app
 from starlette.staticfiles import StaticFiles
 
 from run.src.check_config import check_config_job
-from run.src.check_xxljob_config import check_job_configs_hb, check_job_configs_dlb
+from run.src.check_xxljob_config import check_job_configs_hb, check_job_configs_dlb, check_xxl_job
 from run.src.fetch_account_data import fetch_account_data_job
 from run.src.fetch_plan_data import fetch_plan_data_job
 
 
 app = get_app()
 register_pipeline(
-    id="check",
+    id="check_config",
     description="远传出账配置检查",
     tasks = [
-            # check_config_job,
-             check_job_configs_dlb,
-             check_job_configs_hb],
+             check_config_job
+    ],
+    triggers = [
+        Trigger(
+            id="daily",
+            name="每日",
+            description="每天运行",
+            schedule=CronTrigger.from_crontab("30 10 28-31 * *",timezone='Asia/Shanghai'),
+        ),
+    ],
+)
+
+register_pipeline(
+    id="check_XXL_JOB",
+    description="远传出账定时任务配置检查",
+    tasks = [
+             check_xxl_job
+    ],
     triggers = [
         Trigger(
             id="daily",
@@ -32,15 +47,28 @@ register_pipeline(
     ],
 )
 register_pipeline(
-    id="fetch",
+    id="fetch_account",
     description="月初统计远传数据",
-    tasks = [fetch_plan_data_job,fetch_account_data_job],
+    tasks = [fetch_account_data_job],
     triggers = [
         Trigger(
             id="daily",
-            name="每天",
+            name="1-10号",
             description="每天运行",
             schedule=CronTrigger.from_crontab("30 10 1-10 * *",timezone='Asia/Shanghai'),
+        ),
+    ],
+)
+register_pipeline(
+    id="fetch",
+    description="月初统计查表计划数据",
+    tasks = [fetch_plan_data_job],
+    triggers = [
+        Trigger(
+            id="daily",
+            name="每个月凌晨1:30",
+            description="每天运行",
+            schedule=CronTrigger.from_crontab("30 1 1 * *",timezone='Asia/Shanghai'),
         ),
     ],
 )
