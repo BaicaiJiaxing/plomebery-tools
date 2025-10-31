@@ -127,7 +127,7 @@ jobs:
     phones: 15671669511,17371694776,17801115673,19871829638,18800502823,18621759775
 
   fetch_account_data:
-    # 生产9家郊区分公司获取户表远传出账数据
+    # 生产9家郊区分公司获取远传出账数据
     sql: |
       select count(*),1 as seq from water_revenue.water_meter_read where client_type = '1' and mr_enter_staff = '远传' 
       union all 
@@ -136,10 +136,19 @@ jobs:
       select count(*),3 as seq from water_revenue.water_meter_read where client_type = '2' and mr_enter_staff = '远传' 
       union all 
       select count(*) ,4 as seq from water_revenue.water_meter_read where client_type = '2' and account_opening_plan ='1'
+      union all 
+      select count(*) ,5 as seq from water_revenue.water_meter_read_his_{previous} where client_type = '1' and account_opening_plan ='1' and mr_enter_staff = '远传' and mr_month='{previous_month}' and mr_input_time <= '{previous_year_date}'
+      union all 
+      select count(*) ,6 as seq from water_revenue.water_meter_read_his_{last_year} where client_type = '1' and account_opening_plan ='1' and mr_enter_staff = '远传' and mr_month='{last_year_month}' and mr_input_time <= '{last_year_date}'
+      union all
+      select count(*) ,7 as seq from water_revenue.water_meter_read_his_{previous} where client_type = '2' and account_opening_plan ='1' and mr_enter_staff = '远传' and mr_month='{previous_month}' and work_day <= '{work_day}'
+      union all
+      select count(*) ,8 as seq from water_revenue.water_meter_read_his_{last_year} where client_type = '2' and account_opening_plan ='1' and mr_enter_staff = '远传' and mr_month='{last_year_month}' and work_day <= '{work_day}'
       order by seq
     companies:
       # 配当前生产的所有营销单位
       - ds_sjs
+      - ds_cxd
       - ds_mtg
       - ds_hr
       - ds_jy
@@ -147,11 +156,10 @@ jobs:
       - ds_lq
       - ds_my
       - ds_qb
-    phones: 15671669511,17801115673,19871829638,18800502823,18621759775
+    phones: 15671669511,17371694776,17801115673,19871829638,18800502823,18621759775
   check_config_job:
     # 生产9家郊区分公司获取大路表远传出账数据
-    phones: 15671669511,17801115673,19871829638,18800502823,18621759775
+    phones: 15671669511,17371694776,17801115673,19871829638,18800502823,18621759775
     scheduler:
   check_job_configs:
-    phones: 15671669511
-#    ,17801115673,19871829638,18800502823,18621759775
+    phones: 15671669511,17371694776,17801115673,19871829638,18800502823,18621759775

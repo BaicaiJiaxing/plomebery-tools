@@ -72,7 +72,7 @@ register_pipeline(
         ),
     ],
 )
-# 本地调试
+
 if __name__ == "__main__":
    import uvicorn
    uvicorn.run("plombery:get_app", reload=True, factory=True)

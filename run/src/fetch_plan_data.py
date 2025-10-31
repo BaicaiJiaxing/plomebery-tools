@@ -98,8 +98,8 @@ def run_fetch_wmr_uat():
     pass
 
 
-if __name__ == "__main__":
-    # 手动触发测试
-    run_fetch_wmr_pro()
-
-    # fill_sql(job_config)
+# if __name__ == "__main__":
+#     # 手动触发测试
+#     run_fetch_wmr_pro()
+#
+#     # fill_sql(job_config)
