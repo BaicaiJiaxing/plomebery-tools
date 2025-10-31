@@ -19,8 +19,14 @@ class CompanyNameEnum(Enum):
 
     @classmethod
     def get_name(cls, company_code: str) -> str:
-        """通过英文标识获取中文名"""
-        try:
-            return cls[company_code].value
-        except KeyError:
-            return company_code  # 默认返回原始code
+        """通过英文标识获取中文名，不区分大小写"""
+        if not company_code:
+            return ""
+
+        upper_code = company_code.upper()
+
+        for member_name, member in cls.__members__.items():
+            if member_name == upper_code:
+                return member.value
+
+        return company_code
