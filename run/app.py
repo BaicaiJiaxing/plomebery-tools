@@ -27,7 +27,7 @@ register_pipeline(
             id="daily",
             name="每日",
             description="每天运行",
-            schedule=CronTrigger.from_crontab("30 10 28-31 * *"),
+            schedule=CronTrigger.from_crontab("30 10 28-31 * *",timezone='Asia/Shanghai'),
         ),
     ],
 )
@@ -40,7 +40,7 @@ register_pipeline(
             id="daily",
             name="每天",
             description="每天运行",
-            schedule=CronTrigger.from_crontab("30 10 1-10  * *"),
+            schedule=CronTrigger.from_crontab("30 10 28-31 * *",timezone='Asia/Shanghai'),
         ),
     ],
 )
