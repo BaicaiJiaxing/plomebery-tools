@@ -1,0 +1,4 @@
+include:
+  - project: 'WPG_JUNIT/devops-ci-service'
+    ref: feature-k8s
+    file: 'templates/java-pipeline.yml'
