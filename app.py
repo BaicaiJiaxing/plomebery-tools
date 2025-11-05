@@ -1,18 +1,10 @@
-import os
-from datetime import datetime
-from random import randint
-
 from apscheduler.triggers.cron import CronTrigger
-from apscheduler.triggers.interval import IntervalTrigger
-from fastapi import FastAPI
-from plombery import task, get_logger, Trigger, register_pipeline,get_app
-from starlette.staticfiles import StaticFiles
+from plombery import Trigger, register_pipeline, get_app
 
-from run.src.check_config import check_config_job
-from run.src.check_xxljob_config import check_job_configs_hb, check_job_configs_dlb, check_xxl_job
-from run.src.fetch_account_data import fetch_account_data_job
-from run.src.fetch_plan_data import fetch_plan_data_job
-
+from src.check_config import check_config_job
+from src.check_xxljob_config import check_xxl_job
+from src.fetch_account_data import fetch_account_data_job
+from src.fetch_plan_data import fetch_plan_data_job
 
 app = get_app()
 register_pipeline(

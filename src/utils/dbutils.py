@@ -3,7 +3,7 @@ import pymysql
 import psycopg2
 import logging
 
-from run.src.utils.ConfigLoader import ConfigLoader
+from src.utils.ConfigLoader import ConfigLoader
 
 
 class DBUtils:

@@ -3,10 +3,10 @@ import logging
 
 from plombery import task, get_logger
 
-from run.src.utils import logger
-from run.src.rules.CompanyEnum import CompanyNameEnum
-from run.src.sms.sms_client import SMSClient
-from run.src.utils import ConfigLoader, dbutils
+from src.utils import logger
+from src.rules.CompanyEnum import CompanyNameEnum
+from src.sms.sms_client import SMSClient
+from src.utils import ConfigLoader, dbutils
 
 config = ConfigLoader.ConfigLoader()
 sms_client = SMSClient(base_url=config.get_sms_api())

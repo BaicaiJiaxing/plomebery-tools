@@ -6,9 +6,9 @@ import json
 
 from plombery import task,get_logger
 
-from run.src.fetch_account_data import sms_client
-from run.src.sms.sms_client import SMSClient
-from run.src.utils import ConfigLoader
+from src.fetch_account_data import sms_client
+from src.sms.sms_client import SMSClient
+from src.utils import ConfigLoader
 
 config = ConfigLoader.ConfigLoader()
 LOGIN_URL = config.get('XXL_LOGIN_URL')

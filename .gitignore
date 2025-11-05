@@ -1,3 +1,5 @@
-/run/plombery.db
-/run/logs/
-/run/.data/
+/.venv1/
+/plombery.db
+/logs/
+/src/test/logs/
+/src/.data/
